@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import models
+from app.database import Base, engine
+
+models.Base.metadata.create_all(bind=engine)
+
 app = FastAPI(
     title="CampusClubs API",
     description="Портал управления студенческими организациями",
