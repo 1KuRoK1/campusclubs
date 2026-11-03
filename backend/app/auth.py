@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -14,16 +14,20 @@ SECRET_KEY = "campusclubs-dev-secret-change-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def захешировать_пароль(password: str) -> str:
-    return pwd_context.hash(password)
+    пароль_байты = password.encode("utf-8")[:72]
+    return bcrypt.hashpw(пароль_байты, bcrypt.gensalt()).decode("utf-8")
 
 
 def проверить_пароль(password: str, password_hash: str) -> bool:
-    return pwd_context.verify(password, password_hash)
+    пароль_байты = password.encode("utf-8")[:72]
+    try:
+        return bcrypt.checkpw(пароль_байты, password_hash.encode("utf-8"))
+    except ValueError:
+        return False
 
 
 def создать_токен(data: dict) -> str:
