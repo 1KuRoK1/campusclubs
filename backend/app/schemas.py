@@ -1,0 +1,143 @@
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, EmailStr, Field
+
+from app.models import (
+    РольПользователя,
+    СтатусЗаявки,
+    СтатусЧленства,
+    СтатусЗаписи,
+)
+
+
+class ПользовательСоздать(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=6)
+    full_name: str
+    role: РольПользователя = РольПользователя.СТУДЕНТ
+    faculty: Optional[str] = None
+    group: Optional[str] = None
+
+
+class ПользовательЧитать(BaseModel):
+    id: int
+    email: EmailStr
+    full_name: str
+    role: РольПользователя
+    faculty: Optional[str] = None
+    group: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ВходВСистему(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Токен(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class ОрганизацияСоздать(BaseModel):
+    name: str
+    description: Optional[str] = None
+    direction: Optional[str] = None
+    format: Optional[str] = None
+    faculty: Optional[str] = None
+    size: int = 0
+    contacts: Optional[str] = None
+    lead_id: Optional[int] = None
+
+
+class ОрганизацияЧитать(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    direction: Optional[str] = None
+    format: Optional[str] = None
+    faculty: Optional[str] = None
+    size: int
+    contacts: Optional[str] = None
+    lead_id: Optional[int] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ОтветАнкетыСоздать(BaseModel):
+    question: str
+    answer: Optional[str] = None
+
+
+class ОтветАнкетыЧитать(BaseModel):
+    id: int
+    question: str
+    answer: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ЗаявкаСоздать(BaseModel):
+    organization_id: int
+    comment: Optional[str] = None
+    ответы: list[ОтветАнкетыСоздать] = []
+
+
+class ЗаявкаЧитать(BaseModel):
+    id: int
+    user_id: int
+    organization_id: int
+    status: СтатусЗаявки
+    created_at: datetime
+    updated_at: datetime
+    comment: Optional[str] = None
+    ответы: list[ОтветАнкетыЧитать] = []
+
+    class Config:
+        from_attributes = True
+
+
+class СменаСтатуса(BaseModel):
+    new_status: СтатусЗаявки
+    comment: Optional[str] = None
+
+
+class ИсторияСтатусовЧитать(BaseModel):
+    id: int
+    old_status: Optional[str] = None
+    new_status: str
+    changed_by: int
+    changed_at: datetime
+    comment: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ЧленствоЧитать(BaseModel):
+    id: int
+    organization_id: int
+    role_id: Optional[int] = None
+    joined_at: datetime
+    status: СтатусЧленства
+
+    class Config:
+        from_attributes = True
+
+
+class УведомлениеЧитать(BaseModel):
+    id: int
+    type: str
+    message: str
+    is_read: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
