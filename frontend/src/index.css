@@ -1,0 +1,26 @@
+:root {
+  --campus-primary: #1e3a5f;
+  --campus-accent: #2f6b4f;
+  --campus-surface: #f3f4f6;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--campus-surface);
+  color: #1f2937;
+}
+
+.btn-primary {
+  background-color: var(--campus-primary);
+  border-color: var(--campus-primary);
+}
+
+.btn-primary:hover {
+  background-color: #172e4b;
+  border-color: #172e4b;
+}
+
+.text-accent {
+  color: var(--campus-accent);
+}
