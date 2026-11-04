@@ -1,14 +1,9 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Каталог from './pages/Каталог'
-
-function Заглушка({ название }) {
-  return (
-    <div className="container py-5">
-      <h1 className="h3 mb-3">{название}</h1>
-      <p className="text-muted">Раздел в разработке.</p>
-    </div>
-  )
-}
+import Организация from './pages/Организация'
+import ПодачаЗаявки from './pages/ПодачаЗаявки'
+import Вход from './pages/Вход'
+import ЛичныйКабинет from './pages/ЛичныйКабинет'
 
 function App() {
   return (
@@ -26,8 +21,10 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Каталог />} />
-        <Route path="/cabinet" element={<Заглушка название="Личный кабинет" />} />
-        <Route path="/login" element={<Заглушка название="Вход" />} />
+        <Route path="/organizations/:id" element={<Организация />} />
+        <Route path="/apply/:id" element={<ПодачаЗаявки />} />
+        <Route path="/cabinet" element={<ЛичныйКабинет />} />
+        <Route path="/login" element={<Вход />} />
       </Routes>
     </BrowserRouter>
   )
