@@ -141,3 +141,49 @@ class УведомлениеЧитать(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class МероприятиеСоздать(BaseModel):
+    organization_id: int
+    title: str
+    description: Optional[str] = None
+    starts_at: datetime
+    ends_at: Optional[datetime] = None
+    place: Optional[str] = None
+
+
+class МероприятиеЧитать(BaseModel):
+    id: int
+    organization_id: int
+    title: str
+    description: Optional[str] = None
+    starts_at: datetime
+    ends_at: Optional[datetime] = None
+    place: Optional[str] = None
+    created_by: int
+
+    class Config:
+        from_attributes = True
+
+
+class ОтзывСоздать(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    text: Optional[str] = None
+
+
+class ОтзывЧитать(BaseModel):
+    id: int
+    organization_id: int
+    user_id: int
+    rating: int
+    text: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class РейтингОрганизации(BaseModel):
+    organization_id: int
+    average_rating: float
+    reviews_count: int
