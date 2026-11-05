@@ -38,7 +38,7 @@ async function запрос(путь, опции = {}) {
       const данные = await ответ.json()
       if (данные.detail) текст = данные.detail
     } catch {
-      // тело не JSON
+      // Тело ответа не JSON, оставляем стандартный текст
     }
     throw new Error(текст)
   }
@@ -48,7 +48,6 @@ async function запрос(путь, опции = {}) {
 }
 
 export const api = {
-  // аутентификация
   вход: async (email, password) => {
     const тело = new URLSearchParams()
     тело.append('username', email)
@@ -75,7 +74,6 @@ export const api = {
 
   мой_профиль: () => запрос('/auth/me'),
 
-  // организации
   список_организаций: (параметры = {}) => {
     const часть = new URLSearchParams()
     Object.entries(параметры).forEach(([ключ, значение]) => {
@@ -95,7 +93,6 @@ export const api = {
 
   рейтинг_организации: (id) => запрос(`/organizations/${id}/rating`),
 
-  // заявки
   подать_заявку: (данные) =>
     запрос('/applications', {
       method: 'POST',
@@ -109,4 +106,12 @@ export const api = {
   мои_членства: () => запрос('/me/memberships'),
 
   мои_уведомления: () => запрос('/me/notifications'),
+
+  заявки_организации: (orgId) => запрос(`/applications/organization/${orgId}`),
+
+  сменить_статус: (appId, newStatus) =>
+    запрос(`/applications/${appId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ new_status: newStatus, comment: 'Изменено руководителем' }),
+    }),
 }
