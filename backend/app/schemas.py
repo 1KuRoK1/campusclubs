@@ -70,6 +70,15 @@ class ОрганизацияЧитать(BaseModel):
         from_attributes = True
 
 
+class ОрганизацияКратко(BaseModel):
+    id: int
+    name: str
+    direction: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class ОтветАнкетыСоздать(BaseModel):
     question: str
     answer: Optional[str] = None
@@ -87,6 +96,7 @@ class ОтветАнкетыЧитать(BaseModel):
 class ЗаявкаСоздать(BaseModel):
     organization_id: int
     comment: Optional[str] = None
+    priority: int = 1
     ответы: list[ОтветАнкетыСоздать] = []
 
 
@@ -95,10 +105,12 @@ class ЗаявкаЧитать(BaseModel):
     user_id: int
     organization_id: int
     status: СтатусЗаявки
+    priority: int
     created_at: datetime
     updated_at: datetime
     comment: Optional[str] = None
     ответы: list[ОтветАнкетыЧитать] = []
+    organization: Optional[ОрганизацияКратко] = None
 
     class Config:
         from_attributes = True

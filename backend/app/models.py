@@ -147,6 +147,7 @@ class Заявка(Base):
         nullable=False,
         default=СтатусЗаявки.ПОДАНА,
     )
+    priority = Column(Integer, default=1, nullable=False) # НОВОЕ ПОЛЕ: приоритет
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     comment = Column(Text, nullable=True)

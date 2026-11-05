@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import List
 
 from app.auth import получить_текущего_пользователя, требуется_роль
 from app.database import get_db
@@ -29,6 +31,8 @@ router = APIRouter(prefix="/api/applications", tags=["заявки"])
     СтатусЗаявки.РЕШЕНИЕ: [],
 }
 
+class ПриоритетыЗаявок(BaseModel):
+    application_ids: List[int]
 
 @router.post("", response_model=ЗаявкаЧитать, status_code=201)
 def подать_заявку(
@@ -52,11 +56,15 @@ def подать_заявку(
     if существующая:
         raise HTTPException(status_code=400, detail="У вас уже есть активная заявка в эту организацию")
 
+    # Вычисляем приоритет по умолчанию (в конец списка)
+    макс_приоритет = db.query(Заявка).filter(Заявка.user_id == текущий.id).count()
+
     заявка = Заявка(
         user_id=текущий.id,
         organization_id=данные.organization_id,
         status=СтатусЗаявки.ПОДАНА,
         comment=данные.comment,
+        priority=макс_приоритет + 1
     )
     db.add(заявка)
     db.flush()
@@ -86,6 +94,22 @@ def подать_заявку(
     db.commit()
     db.refresh(заявка)
     return заявка
+
+
+@router.put("/priorities")
+def обновить_приоритеты(
+    данные: ПриоритетыЗаявок,
+    db: Session = Depends(get_db),
+    текущий: Пользователь = Depends(получить_текущего_пользователя),
+):
+    # Проходим по списку ID и присваиваем приоритеты по порядку (1, 2, 3...)
+    for индекс, app_id in enumerate(данные.application_ids):
+        заявка = db.query(Заявка).filter(Заявка.id == app_id, Заявка.user_id == текущий.id).first()
+        if заявка:
+            заявка.priority = индекс + 1
+    
+    db.commit()
+    return {"status": "ok"}
 
 
 @router.get("/organization/{org_id}", response_model=list[ЗаявкаЧитать])

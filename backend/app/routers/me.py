@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session, joinedload
 
 from app.auth import получить_текущего_пользователя
 from app.database import get_db
@@ -31,12 +31,19 @@ def мои_заявки(
     db: Session = Depends(get_db),
     текущий: Пользователь = Depends(получить_текущего_пользователя),
 ):
-    return (
+    заявки = (
         db.query(Заявка)
+        .options(joinedload(Заявка.организация), joinedload(Заявка.ответы))
         .filter(Заявка.user_id == текущий.id)
-        .order_by(Заявка.created_at.desc())
+        .order_by(Заявка.priority)
         .all()
     )
+    
+    # Вручную подкладываем организацию в поле organization, чтобы Pydantic её увидел
+    for з in заявки:
+        з.organization = з.организация
+        
+    return заявки
 
 
 @router.get("/applications/{app_id}/history", response_model=list[ИсторияСтатусовЧитать])
@@ -89,7 +96,6 @@ def отметить_прочитанным(
         .first()
     )
     if not уведомление:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Уведомление не найдено")
     уведомление.is_read = True
     db.commit()
