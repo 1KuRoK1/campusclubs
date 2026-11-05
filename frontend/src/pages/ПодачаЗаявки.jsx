@@ -8,6 +8,7 @@ export default function ПодачаЗаявки() {
 
   const [организация, setОрганизация] = useState(null)
   const [комментарий, setКомментарий] = useState('')
+  const [портфолио, setПортфолио] = useState('')
   const [ответы, setОтветы] = useState([
     { question: 'Почему вы хотите вступить в организацию?', answer: '' },
     { question: 'Сколько времени готовы уделять в неделю?', answer: '' },
@@ -35,6 +36,9 @@ export default function ПодачаЗаявки() {
     setОтправка(true)
 
     const заполненные = ответы.filter((о) => о.answer.trim() !== '')
+    if (портфолио) {
+      заполненные.push({ question: 'Ссылка на портфолио', answer: портфолио })
+    }
 
     try {
       await api.подать_заявку({
@@ -52,13 +56,13 @@ export default function ПодачаЗаявки() {
   }
 
   if (!организация && !ошибка) {
-    return <div className="container py-4"><p className="text-muted">Загрузка...</p></div>
+    return <div className="container py-5 text-center text-muted">Загрузка...</div>
   }
 
   if (успех) {
     return (
-      <div className="container py-4">
-        <div className="alert alert-success">
+      <div className="container py-5 text-center">
+        <div className="alert alert-success d-inline-block px-5">
           Заявка успешно отправлена. Переход в личный кабинет...
         </div>
       </div>
@@ -66,8 +70,8 @@ export default function ПодачаЗаявки() {
   }
 
   return (
-    <div className="container py-4" style={{ maxWidth: 720 }}>
-      <nav aria-label="breadcrumb" className="mb-3">
+    <div className="container py-5" style={{ maxWidth: 720 }}>
+      <nav aria-label="breadcrumb" className="mb-4">
         <ol className="breadcrumb">
           <li className="breadcrumb-item"><Link to="/">Каталог</Link></li>
           {организация && (
@@ -79,49 +83,62 @@ export default function ПодачаЗаявки() {
         </ol>
       </nav>
 
-      <h1 className="h3 mb-4">Заявка на вступление</h1>
-      {организация && (
-        <p className="text-muted mb-4">Организация: {организация.name}</p>
-      )}
+      <div className="card card-campus shadow-sm p-4 p-md-5">
+        <h1 className="h3 fw-bold mb-2 text-dark">Заявка на вступление</h1>
+        {организация && (
+          <p className="text-muted mb-4">Организация: <strong>{организация.name}</strong></p>
+        )}
 
-      {ошибка && <div className="alert alert-danger">{ошибка}</div>}
+        {ошибка && <div className="alert alert-danger">{ошибка}</div>}
 
-      <form onSubmit={отправить}>
-        <div className="mb-4">
-          <label className="form-label fw-semibold">Анкета кандидата</label>
-          {ответы.map((ответ, индекс) => (
-            <div className="mb-3" key={индекс}>
-              <label className="form-label small text-muted">{ответ.question}</label>
-              <textarea
-                className="form-control"
-                rows={2}
-                value={ответ.answer}
-                onChange={(e) => изменитьОтвет(индекс, e.target.value)}
-              />
-            </div>
-          ))}
-        </div>
+        <form onSubmit={отправить}>
+          <div className="mb-4">
+            <label className="form-label fw-semibold">Анкета кандидата</label>
+            {ответы.map((ответ, индекс) => (
+              <div className="mb-3" key={индекс}>
+                <label className="form-label small text-muted">{ответ.question}</label>
+                <textarea
+                  className="form-control"
+                  rows={2}
+                  value={ответ.answer}
+                  onChange={(e) => изменитьОтвет(индекс, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
 
-        <div className="mb-4">
-          <label className="form-label fw-semibold">Дополнительный комментарий</label>
-          <textarea
-            className="form-control"
-            rows={3}
-            value={комментарий}
-            onChange={(e) => setКомментарий(e.target.value)}
-            placeholder="Необязательно"
-          />
-        </div>
+          <div className="mb-4">
+            <label className="form-label fw-semibold">Ссылка на портфолио (GitHub, Behance и т.д.)</label>
+            <input
+              type="url"
+              className="form-control"
+              placeholder="https://github.com/..."
+              value={портфолио}
+              onChange={(e) => setПортфолио(e.target.value)}
+            />
+          </div>
 
-        <div className="d-flex gap-2">
-          <button type="submit" className="btn btn-primary" disabled={отправка}>
-            {отправка ? 'Отправка...' : 'Отправить заявку'}
-          </button>
-          <Link to={`/organizations/${id}`} className="btn btn-outline-secondary">
-            Отмена
-          </Link>
-        </div>
-      </form>
+          <div className="mb-4">
+            <label className="form-label fw-semibold">Дополнительный комментарий</label>
+            <textarea
+              className="form-control"
+              rows={3}
+              value={комментарий}
+              onChange={(e) => setКомментарий(e.target.value)}
+              placeholder="Необязательно"
+            />
+          </div>
+
+          <div className="d-flex gap-3 pt-2">
+            <button type="submit" className="btn btn-primary" disabled={отправка}>
+              {отправка ? 'Отправка...' : 'Отправить заявку'}
+            </button>
+            <Link to={`/organizations/${id}`} className="btn btn-outline-secondary">
+              Отмена
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

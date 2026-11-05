@@ -114,4 +114,10 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ new_status: newStatus, comment: 'Изменено руководителем' }),
     }),
+
+  сохранить_приоритеты: (applicationIds) =>
+    запрос('/applications/priorities', {
+      method: 'PUT',
+      body: JSON.stringify({ application_ids: applicationIds }),
+    }),
 }
