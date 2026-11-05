@@ -1,26 +1,197 @@
 :root {
-  --campus-primary: #1e3a5f;
-  --campus-accent: #2f6b4f;
-  --campus-surface: #f3f4f6;
+  --campus-bg: #eef2f6; /* Прохладный голубовато-серый фон */
+  --campus-surface: #ffffff;
+  --campus-primary: #1e3a5f; /* Глубокий синий */
+  --campus-primary-hover: #152c4a;
+  --campus-accent: #d02e2d; /* Красный УрФУ */
+  --campus-text: #2c3e50;
+  --campus-muted: #6c757d;
+  --campus-border: #cbd5e1; /* Более синяя рамка для контраста */
 }
 
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--campus-surface);
-  color: #1f2937;
+  background-color: var(--campus-bg);
+  color: var(--campus-text);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+main {
+  flex: 1;
+  padding-bottom: 3rem;
+}
+
+/* --- Шапка в стиле ИРИТ-РТФ --- */
+.navbar-campus {
+  background-color: var(--campus-primary);
+  padding: 0.8rem 0;
+  border-bottom: 3px solid var(--campus-accent);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.15);
+}
+
+.navbar-brand-campus {
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-transform: uppercase;
+}
+
+.brand-plashka {
+  display: inline-block;
+  background-color: var(--campus-accent);
+  color: white;
+  padding: 4px 12px;
+  transform: skewX(-15deg);
+  font-weight: 800;
+  border-radius: 2px;
+}
+.brand-plashka span {
+  display: inline-block;
+  transform: skewX(15deg);
+}
+
+.navbar-campus .nav-link {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85) !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.navbar-campus .nav-link:hover {
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Подвал --- */
+.footer-campus {
+  background-color: var(--campus-primary);
+  color: #94a3b8;
+  padding: 3rem 0 1.5rem;
+  margin-top: auto;
+  border-top: 3px solid var(--campus-accent);
+}
+
+.footer-campus h5 {
+  color: white;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.footer-campus a {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-campus a:hover {
+  color: white;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* --- Карточки (чистый стиль) --- */
+.card-campus {
+  background: var(--campus-surface);
+  border: 1px solid var(--campus-border);
+  border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+  border-top: 3px solid transparent;
+}
+
+.card-campus:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(30, 58, 95, 0.08);
+  border-top-color: var(--campus-primary);
+}
+
+.card-campus .card-title {
+  font-weight: 700;
+  color: var(--campus-primary);
+}
+
+/* Строгие списки внутри карточек */
+.list-group-campus .list-group-item {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  background-color: transparent;
+  border-color: #e2e8f0;
+  padding: 1rem 0;
+}
+.list-group-campus .list-group-item:first-child {
+  border-top: none;
+}
+.list-group-campus .list-group-item:last-child {
+  border-bottom: none;
+}
+
+/* --- Кнопки --- */
 .btn-primary {
   background-color: var(--campus-primary);
   border-color: var(--campus-primary);
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 0.5rem 1.2rem;
 }
 
-.btn-primary:hover {
-  background-color: #172e4b;
-  border-color: #172e4b;
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--campus-primary-hover);
+  border-color: var(--campus-primary-hover);
 }
 
-.text-accent {
-  color: var(--campus-accent);
+.btn-outline-primary {
+  color: var(--campus-primary);
+  border-color: var(--campus-primary);
+  border-radius: 4px;
 }
+
+.btn-outline-primary:hover {
+  background-color: var(--campus-primary);
+  color: white;
+}
+
+/* --- Формы --- */
+.form-control, .form-select {
+  border-radius: 4px;
+  border: 1px solid var(--campus-border);
+  padding: 0.6rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--campus-primary);
+  box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15);
+}
+
+/* --- Бейджи статусов --- */
+.badge-status {
+  padding: 0.4em 0.6em;
+  font-weight: 600;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+.bg-status-submitted { background-color: #e2e8f0; color: #475569; }
+.bg-status-review { background-color: #dbeafe; color: #1e40af; }
+.bg-status-interview { background-color: #fef3c7; color: #92400e; }
+.bg-status-decision { background-color: #d1fae5; color: #065f46; }
