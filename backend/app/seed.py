@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from app.auth import захешировать_пароль
-from app.database import SessionLocal
+from app.database import SessionLocal, engine, Base
 from app.models import (
     ИсторияСтатусов,
     Мероприятие,
@@ -20,6 +20,8 @@ from app.models import (
 
 ПАРОЛЬ_ДЕМО = "demo1234"
 
+# Создаем таблицы, если их нет
+Base.metadata.create_all(bind=engine)
 
 def запустить_наполнение():
     db = SessionLocal()
