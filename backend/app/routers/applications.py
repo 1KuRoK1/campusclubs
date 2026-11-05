@@ -88,6 +88,29 @@ def подать_заявку(
     return заявка
 
 
+@router.get("/organization/{org_id}", response_model=list[ЗаявкаЧитать])
+def заявки_организации(
+    org_id: int,
+    db: Session = Depends(get_db),
+    текущий: Пользователь = Depends(
+        требуется_роль(РольПользователя.РУКОВОДИТЕЛЬ, РольПользователя.АДМИНИСТРАЦИЯ)
+    ),
+):
+    организация = db.query(Организация).filter(Организация.id == org_id).first()
+    if not организация:
+        raise HTTPException(status_code=404, detail="Организация не найдена")
+
+    if текущий.role == РольПользователя.РУКОВОДИТЕЛЬ and организация.lead_id != текущий.id:
+        raise HTTPException(status_code=403, detail="Вы не руководитель этой организации")
+
+    return (
+        db.query(Заявка)
+        .filter(Заявка.organization_id == org_id)
+        .order_by(Заявка.created_at.desc())
+        .all()
+    )
+
+
 @router.get("/{app_id}", response_model=ЗаявкаЧитать)
 def получить_заявку(
     app_id: int,
