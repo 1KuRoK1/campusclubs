@@ -54,6 +54,8 @@ class Пользователь(Base):
     )
     faculty = Column(String(255), nullable=True)
     group = Column(String(50), nullable=True)
+    bio = Column(Text, nullable=True)
+    portfolio_url = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     организации_руководимые = relationship(
@@ -147,7 +149,7 @@ class Заявка(Base):
         nullable=False,
         default=СтатусЗаявки.ПОДАНА,
     )
-    priority = Column(Integer, default=1, nullable=False) # НОВОЕ ПОЛЕ: приоритет
+    priority = Column(Integer, default=1, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     comment = Column(Text, nullable=True)

@@ -14,6 +14,7 @@ from app.schemas import (
     ЗаявкаЧитать,
     ИсторияСтатусовЧитать,
     ПользовательЧитать,
+    ПользовательОбновить,
     ЧленствоЧитать,
     УведомлениеЧитать,
 )
@@ -23,6 +24,28 @@ router = APIRouter(prefix="/api/me", tags=["личный кабинет"])
 
 @router.get("/profile", response_model=ПользовательЧитать)
 def мой_профиль(текущий: Пользователь = Depends(получить_текущего_пользователя)):
+    return текущий
+
+
+@router.patch("/profile", response_model=ПользовательЧитать)
+def обновить_профиль(
+    данные: ПользовательОбновить,
+    db: Session = Depends(get_db),
+    текущий: Пользователь = Depends(получить_текущего_пользователя),
+):
+    if данные.full_name is not None:
+        текущий.full_name = данные.full_name
+    if данные.faculty is not None:
+        текущий.faculty = данные.faculty
+    if данные.group is not None:
+        текущий.group = данные.group
+    if данные.bio is not None:
+        текущий.bio = данные.bio
+    if данные.portfolio_url is not None:
+        текущий.portfolio_url = данные.portfolio_url
+        
+    db.commit()
+    db.refresh(текущий)
     return текущий
 
 
@@ -38,11 +61,8 @@ def мои_заявки(
         .order_by(Заявка.priority)
         .all()
     )
-    
-    # Вручную подкладываем организацию в поле organization, чтобы Pydantic её увидел
     for з in заявки:
         з.organization = з.организация
-        
     return заявки
 
 

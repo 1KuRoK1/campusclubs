@@ -13,6 +13,8 @@ from app.models import (
     Пользователь,
     РольПользователя,
     СтатусЗаявки,
+    СтатусЧленства,
+    Членство,
     Уведомление,
 )
 from app.schemas import (
@@ -56,7 +58,6 @@ def подать_заявку(
     if существующая:
         raise HTTPException(status_code=400, detail="У вас уже есть активная заявка в эту организацию")
 
-    # Вычисляем приоритет по умолчанию (в конец списка)
     макс_приоритет = db.query(Заявка).filter(Заявка.user_id == текущий.id).count()
 
     заявка = Заявка(
@@ -68,6 +69,13 @@ def подать_заявку(
     )
     db.add(заявка)
     db.flush()
+
+    # Автоматически подтягиваем портфолио и "о себе" из профиля
+    if текущий.portfolio_url:
+        db.add(ОтветАнкеты(application_id=заявка.id, question="Ссылка на портфолио", answer=текущий.portfolio_url))
+    
+    if текущий.bio:
+        db.add(ОтветАнкеты(application_id=заявка.id, question="О себе", answer=текущий.bio))
 
     for ответ in данные.ответы:
         db.add(ОтветАнкеты(
@@ -95,22 +103,18 @@ def подать_заявку(
     db.refresh(заявка)
     return заявка
 
-
 @router.put("/priorities")
 def обновить_приоритеты(
     данные: ПриоритетыЗаявок,
     db: Session = Depends(get_db),
     текущий: Пользователь = Depends(получить_текущего_пользователя),
 ):
-    # Проходим по списку ID и присваиваем приоритеты по порядку (1, 2, 3...)
     for индекс, app_id in enumerate(данные.application_ids):
         заявка = db.query(Заявка).filter(Заявка.id == app_id, Заявка.user_id == текущий.id).first()
         if заявка:
             заявка.priority = индекс + 1
-    
     db.commit()
     return {"status": "ok"}
-
 
 @router.get("/organization/{org_id}", response_model=list[ЗаявкаЧитать])
 def заявки_организации(
@@ -134,7 +138,6 @@ def заявки_организации(
         .all()
     )
 
-
 @router.get("/{app_id}", response_model=ЗаявкаЧитать)
 def получить_заявку(
     app_id: int,
@@ -149,7 +152,6 @@ def получить_заявку(
         raise HTTPException(status_code=403, detail="Нет доступа к этой заявке")
 
     return заявка
-
 
 @router.get("/{app_id}/history", response_model=list[ИсторияСтатусовЧитать])
 def история_заявки(
@@ -170,7 +172,6 @@ def история_заявки(
         .order_by(ИсторияСтатусов.changed_at)
         .all()
     )
-
 
 @router.patch("/{app_id}/status", response_model=ЗаявкаЧитать)
 def сменить_статус(
@@ -198,6 +199,24 @@ def сменить_статус(
         )
 
     заявка.status = данные.new_status
+
+    if данные.new_status == СтатусЗаявки.РЕШЕНИЕ:
+        существующее_членство = (
+            db.query(Членство)
+            .filter(Членство.user_id == заявка.user_id, Членство.organization_id == заявка.organization_id)
+            .first()
+        )
+        if not существующее_членство:
+            новое_членство = Членство(
+                user_id=заявка.user_id,
+                organization_id=заявка.organization_id,
+                status=СтатусЧленства.АКТИВЕН
+            )
+            db.add(новое_членство)
+            
+            организация = db.query(Организация).filter(Организация.id == заявка.organization_id).first()
+            if организация:
+                организация.size += 1
 
     db.add(ИсторияСтатусов(
         application_id=заявка.id,

@@ -27,10 +27,20 @@ class ПользовательЧитать(BaseModel):
     role: РольПользователя
     faculty: Optional[str] = None
     group: Optional[str] = None
+    bio: Optional[str] = None
+    portfolio_url: Optional[str] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class ПользовательОбновить(BaseModel):
+    full_name: Optional[str] = None
+    faculty: Optional[str] = None
+    group: Optional[str] = None
+    bio: Optional[str] = None
+    portfolio_url: Optional[str] = None
 
 
 class ВходВСистему(BaseModel):
@@ -139,6 +149,7 @@ class ЧленствоЧитать(BaseModel):
     role_id: Optional[int] = None
     joined_at: datetime
     status: СтатусЧленства
+    user: Optional[ПользовательЧитать] = None
 
     class Config:
         from_attributes = True
