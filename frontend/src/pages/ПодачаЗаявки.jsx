@@ -8,7 +8,6 @@ export default function ПодачаЗаявки() {
 
   const [организация, setОрганизация] = useState(null)
   const [комментарий, setКомментарий] = useState('')
-  const [портфолио, setПортфолио] = useState('')
   const [ответы, setОтветы] = useState([
     { question: 'Почему вы хотите вступить в организацию?', answer: '' },
     { question: 'Сколько времени готовы уделять в неделю?', answer: '' },
@@ -36,9 +35,6 @@ export default function ПодачаЗаявки() {
     setОтправка(true)
 
     const заполненные = ответы.filter((о) => о.answer.trim() !== '')
-    if (портфолио) {
-      заполненные.push({ question: 'Ссылка на портфолио', answer: портфолио })
-    }
 
     try {
       await api.подать_заявку({
@@ -94,6 +90,8 @@ export default function ПодачаЗаявки() {
         <form onSubmit={отправить}>
           <div className="mb-4">
             <label className="form-label fw-semibold">Анкета кандидата</label>
+            <p className="text-muted small mb-3">Ваши контакты и портфолио автоматически прикрепятся из профиля.</p>
+            
             {ответы.map((ответ, индекс) => (
               <div className="mb-3" key={индекс}>
                 <label className="form-label small text-muted">{ответ.question}</label>
@@ -105,17 +103,6 @@ export default function ПодачаЗаявки() {
                 />
               </div>
             ))}
-          </div>
-
-          <div className="mb-4">
-            <label className="form-label fw-semibold">Ссылка на портфолио (GitHub, Behance и т.д.)</label>
-            <input
-              type="url"
-              className="form-control"
-              placeholder="https://github.com/..."
-              value={портфолио}
-              onChange={(e) => setПортфолио(e.target.value)}
-            />
           </div>
 
           <div className="mb-4">

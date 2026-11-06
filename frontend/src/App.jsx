@@ -7,6 +7,7 @@ import ПодачаЗаявки from './pages/ПодачаЗаявки'
 import Вход from './pages/Вход'
 import ЛичныйКабинет from './pages/ЛичныйКабинет'
 import УправлениеОрганизацией from './pages/УправлениеОрганизацией'
+import СоздатьОрганизацию from './pages/СоздатьОрганизацию'
 
 function Шапка() {
   const [профиль, setПрофиль] = useState(null)
@@ -81,6 +82,7 @@ function App() {
           <Route path="/cabinet" element={<ЛичныйКабинет />} />
           <Route path="/manage" element={<УправлениеОрганизацией />} />
           <Route path="/login" element={<Вход />} />
+	  <Route path="/create-organization" element={<СоздатьОрганизацию />} />
         </Routes>
       </main>
 

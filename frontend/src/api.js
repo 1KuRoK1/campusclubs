@@ -74,6 +74,9 @@ export const api = {
 
   мой_профиль: () => запрос('/auth/me'),
 
+  обновить_профиль: (данные) => 
+    запрос('/me/profile', { method: 'PATCH', body: JSON.stringify(данные) }),
+
   список_организаций: (параметры = {}) => {
     const часть = new URLSearchParams()
     Object.entries(параметры).forEach(([ключ, значение]) => {
@@ -120,4 +123,35 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ application_ids: applicationIds }),
     }),
+    
+  оставить_отзыв: (orgId, данные) =>
+    запрос(`/organizations/${orgId}/reviews`, {
+      method: 'POST',
+      body: JSON.stringify(данные),
+    }),
+
+  участники_организации: (orgId) => запрос(`/organizations/${orgId}/members`),
+
+  роли_организации: (orgId) => запрос(`/organizations/${orgId}/roles`),
+
+  сменить_роль_участника: (orgId, memberId, roleId) =>
+    запрос(`/organizations/${orgId}/members/${memberId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role_id: roleId }),
+    }),
+
+  создать_организацию: (данные) =>
+    запрос('/organizations', {
+      method: 'POST',
+      body: JSON.stringify(данные),
+    }),
+
+  список_мероприятий: (orgId) => запрос(`/events?organization_id=${orgId}`),
+
+  записаться_на_мероприятие: (eventId) =>
+    запрос(`/events/${eventId}/register`, {
+      method: 'POST',
+    }),
+
+  отчет_организации: (orgId) => запрос(`/organizations/${orgId}/report`),
 }
