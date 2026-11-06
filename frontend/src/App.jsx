@@ -13,15 +13,24 @@ function Шапка() {
   const [профиль, setПрофиль] = useState(null)
   const navigate = useNavigate()
 
-  useEffect(() => {
+  const проверитьПрофиль = () => {
     if (localStorage.getItem('token')) {
-      api.мой_профиль().then(setПрофиль).catch(() => {})
+      api.мой_профиль().then(setПрофиль).catch(() => setПрофиль(null))
+    } else {
+      setПрофиль(null)
     }
+  }
+
+  useEffect(() => {
+    проверитьПрофиль()
+    // Слушаем событие, чтобы шапка обновлялась сразу после входа/выхода
+    window.addEventListener('auth-change', проверитьПрофиль)
+    return () => window.removeEventListener('auth-change', проверитьПрофиль)
   }, [])
 
   function выйти() {
     api.выход()
-    setПрофиль(null)
+    window.dispatchEvent(new Event('auth-change'))
     navigate('/login')
   }
 
@@ -81,8 +90,8 @@ function App() {
           <Route path="/apply/:id" element={<ПодачаЗаявки />} />
           <Route path="/cabinet" element={<ЛичныйКабинет />} />
           <Route path="/manage" element={<УправлениеОрганизацией />} />
+          <Route path="/create-organization" element={<СоздатьОрганизацию />} />
           <Route path="/login" element={<Вход />} />
-	  <Route path="/create-organization" element={<СоздатьОрганизацию />} />
         </Routes>
       </main>
 

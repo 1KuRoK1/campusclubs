@@ -32,14 +32,17 @@ export default function ПодачаЗаявки() {
   async function отправить(e) {
     e.preventDefault()
     setОшибка('')
-    setОтправка(true)
 
     const заполненные = ответы.filter((о) => о.answer.trim() !== '')
+    if (заполненные.length === 0 && !комментарий.trim()) {
+      return setОшибка('Заполните хотя бы один пункт анкеты или комментарий')
+    }
 
+    setОтправка(true)
     try {
       await api.подать_заявку({
         organization_id: Number(id),
-        comment: комментарий || null,
+        comment: комментарий.trim() || null,
         ответы: заполненные,
       })
       setУспех(true)
@@ -58,8 +61,9 @@ export default function ПодачаЗаявки() {
   if (успех) {
     return (
       <div className="container py-5 text-center">
-        <div className="alert alert-success d-inline-block px-5">
-          Заявка успешно отправлена. Переход в личный кабинет...
+        <div className="alert alert-success d-inline-block px-5 py-4 shadow-sm">
+          <h4 className="mb-1">Заявка отправлена!</h4>
+          <p className="mb-0 text-muted small">Переход в личный кабинет...</p>
         </div>
       </div>
     )
@@ -100,6 +104,7 @@ export default function ПодачаЗаявки() {
                   rows={2}
                   value={ответ.answer}
                   onChange={(e) => изменитьОтвет(индекс, e.target.value)}
+                  placeholder="Ваш ответ..."
                 />
               </div>
             ))}

@@ -26,7 +26,6 @@ router = APIRouter(prefix="/api/me", tags=["личный кабинет"])
 def мой_профиль(текущий: Пользователь = Depends(получить_текущего_пользователя)):
     return текущий
 
-
 @router.patch("/profile", response_model=ПользовательЧитать)
 def обновить_профиль(
     данные: ПользовательОбновить,
@@ -34,15 +33,18 @@ def обновить_профиль(
     текущий: Пользователь = Depends(получить_текущего_пользователя),
 ):
     if данные.full_name is not None:
-        текущий.full_name = данные.full_name
+        if not данные.full_name.strip():
+            raise HTTPException(status_code=400, detail="ФИО не может быть пустым")
+        текущий.full_name = данные.full_name.strip()
+        
     if данные.faculty is not None:
         текущий.faculty = данные.faculty
     if данные.group is not None:
-        текущий.group = данные.group
+        текущий.group = данные.group.strip()
     if данные.bio is not None:
-        текущий.bio = данные.bio
+        текущий.bio = данные.bio.strip()
     if данные.portfolio_url is not None:
-        текущий.portfolio_url = данные.portfolio_url
+        текущий.portfolio_url = данные.portfolio_url.strip()
         
     db.commit()
     db.refresh(текущий)
@@ -65,22 +67,22 @@ def мои_заявки(
         з.organization = з.организация
     return заявки
 
-
-@router.get("/applications/{app_id}/history", response_model=list[ИсторияСтатусовЧитать])
-def история_моей_заявки(
+@router.delete("/applications/{app_id}", status_code=204)
+def отозвать_заявку(
     app_id: int,
     db: Session = Depends(get_db),
     текущий: Пользователь = Depends(получить_текущего_пользователя),
 ):
     заявка = db.query(Заявка).filter(Заявка.id == app_id, Заявка.user_id == текущий.id).first()
     if not заявка:
-        return []
-    return (
-        db.query(ИсторияСтатусов)
-        .filter(ИсторияСтатусов.application_id == app_id)
-        .order_by(ИсторияСтатусов.changed_at)
-        .all()
-    )
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    
+    if заявка.status == "решение":
+        raise HTTPException(status_code=400, detail="Нельзя отозвать одобренную заявку")
+        
+    db.delete(заявка)
+    db.commit()
+    return None
 
 
 @router.get("/memberships", response_model=list[ЧленствоЧитать])
@@ -88,7 +90,7 @@ def мои_членства(
     db: Session = Depends(get_db),
     текущий: Пользователь = Depends(получить_текущего_пользователя),
 ):
-    return db.query(Членство).filter(Членство.user_id == текущий.id).all()
+    return db.query(Членство).options(joinedload(Членство.организация)).filter(Членство.user_id == текущий.id).all()
 
 
 @router.get("/notifications", response_model=list[УведомлениеЧитать])

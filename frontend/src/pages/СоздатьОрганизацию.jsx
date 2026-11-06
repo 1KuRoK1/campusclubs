@@ -16,17 +16,21 @@ export default function СоздатьОрганизацию() {
   async function отправить(e) {
     e.preventDefault()
     setОшибка('')
-    setОтправка(true)
 
+    if (!название.trim() || !описание.trim()) {
+      return setОшибка('Заполните название и описание')
+    }
+
+    setОтправка(true)
     try {
       await api.создать_организацию({
-        name: название,
-        description: описание,
+        name: название.trim(),
+        description: описание.trim(),
         direction: направление,
         format: формат,
         faculty: факультет,
-        contacts: контакты,
-        size: 1 // Создатель сразу считается первым участником
+        contacts: контакты.trim() || null,
+        size: 1
       })
       navigate('/manage')
     } catch (err) {
@@ -51,13 +55,13 @@ export default function СоздатьОрганизацию() {
 
         <form onSubmit={отправить}>
           <div className="mb-3">
-            <label className="form-label fw-semibold">Название организации</label>
-            <input type="text" className="form-control" value={название} onChange={e => setНазвание(e.target.value)} required />
+            <label className="form-label fw-semibold">Название организации <span className="text-danger">*</span></label>
+            <input type="text" className="form-control" value={название} onChange={e => setНазвание(e.target.value)} required minLength={3} placeholder="Клуб робототехники" />
           </div>
 
           <div className="mb-3">
-            <label className="form-label fw-semibold">Описание</label>
-            <textarea className="form-control" rows={3} value={описание} onChange={e => setОписание(e.target.value)} required />
+            <label className="form-label fw-semibold">Описание <span className="text-danger">*</span></label>
+            <textarea className="form-control" rows={3} value={описание} onChange={e => setОписание(e.target.value)} required minLength={10} placeholder="Чем занимается ваша организация?" />
           </div>
 
           <div className="row mb-3">
@@ -92,7 +96,7 @@ export default function СоздатьОрганизацию() {
               </select>
             </div>
             <div className="col-md-6">
-              <label className="form-label fw-semibold">Контакты (соцсети, аудитория)</label>
+              <label className="form-label fw-semibold">Контакты</label>
               <input type="text" className="form-control" value={контакты} onChange={e => setКонтакты(e.target.value)} placeholder="vk.com/club, ауд. 412" />
             </div>
           </div>

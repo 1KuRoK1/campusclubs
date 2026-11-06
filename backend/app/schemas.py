@@ -13,8 +13,8 @@ from app.models import (
 
 class ПользовательСоздать(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6)
-    full_name: str
+    password: str = Field(min_length=6, max_length=72) # Ограничение bcrypt
+    full_name: str = Field(min_length=2)
     role: РольПользователя = РольПользователя.СТУДЕНТ
     faculty: Optional[str] = None
     group: Optional[str] = None
@@ -36,7 +36,7 @@ class ПользовательЧитать(BaseModel):
 
 
 class ПользовательОбновить(BaseModel):
-    full_name: Optional[str] = None
+    full_name: Optional[str] = Field(None, min_length=2)
     faculty: Optional[str] = None
     group: Optional[str] = None
     bio: Optional[str] = None
@@ -54,12 +54,12 @@ class Токен(BaseModel):
 
 
 class ОрганизацияСоздать(BaseModel):
-    name: str
-    description: Optional[str] = None
+    name: str = Field(min_length=3, max_length=255)
+    description: Optional[str] = Field(None, min_length=10)
     direction: Optional[str] = None
     format: Optional[str] = None
     faculty: Optional[str] = None
-    size: int = 0
+    size: int = Field(default=0, ge=0)
     contacts: Optional[str] = None
     lead_id: Optional[int] = None
 
@@ -90,7 +90,7 @@ class ОрганизацияКратко(BaseModel):
 
 
 class ОтветАнкетыСоздать(BaseModel):
-    question: str
+    question: str = Field(min_length=1)
     answer: Optional[str] = None
 
 
@@ -104,9 +104,9 @@ class ОтветАнкетыЧитать(BaseModel):
 
 
 class ЗаявкаСоздать(BaseModel):
-    organization_id: int
+    organization_id: int = Field(gt=0)
     comment: Optional[str] = None
-    priority: int = 1
+    priority: int = Field(default=1, ge=1)
     ответы: list[ОтветАнкетыСоздать] = []
 
 
@@ -150,6 +150,7 @@ class ЧленствоЧитать(BaseModel):
     joined_at: datetime
     status: СтатусЧленства
     user: Optional[ПользовательЧитать] = None
+    organization: Optional[ОрганизацияКратко] = None
 
     class Config:
         from_attributes = True
@@ -167,8 +168,8 @@ class УведомлениеЧитать(BaseModel):
 
 
 class МероприятиеСоздать(BaseModel):
-    organization_id: int
-    title: str
+    organization_id: int = Field(gt=0)
+    title: str = Field(min_length=3)
     description: Optional[str] = None
     starts_at: datetime
     ends_at: Optional[datetime] = None

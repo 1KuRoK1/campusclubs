@@ -38,7 +38,7 @@ async function запрос(путь, опции = {}) {
       const данные = await ответ.json()
       if (данные.detail) текст = данные.detail
     } catch {
-      // Тело ответа не JSON, оставляем стандартный текст
+      // Тело ответа не JSON
     }
     throw new Error(текст)
   }
@@ -103,6 +103,9 @@ export const api = {
     }),
 
   мои_заявки: () => запрос('/me/applications'),
+
+  отозвать_заявку: (appId) => 
+    запрос(`/me/applications/${appId}`, { method: 'DELETE' }),
 
   история_заявки: (id) => запрос(`/me/applications/${id}/history`),
 
