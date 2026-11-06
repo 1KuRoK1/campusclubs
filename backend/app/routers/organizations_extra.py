@@ -51,7 +51,22 @@ def оставить_отзыв(org_id: int, данные: ОтзывСозда�
 
 @router.get("/{org_id}/members", response_model=list[ЧленствоЧитать])
 def состав_организации(org_id: int, db: Session = Depends(get_db)):
-    return db.query(Членство).options(joinedload(Членство.пользователь)).filter(Членство.organization_id == org_id).all()
+    # Загружаем членства вместе с пользователями и организациями
+    членства = (
+        db.query(Членство)
+        .options(joinedload(Членство.пользователь), joinedload(Членство.организация))
+        .filter(Членство.organization_id == org_id)
+        .all()
+    )
+    
+    # Явно подставляем пользователя, чтобы Pydantic его увидел
+    for ч in членства:
+        if ч.пользователь:
+            ч.user = ч.пользователь
+        if ч.организация:
+            ч.organization = ч.организация
+            
+    return членства
 
 @router.get("/{org_id}/roles")
 def роли_организации(org_id: int, db: Session = Depends(get_db)):
@@ -64,7 +79,6 @@ def сменить_роль_участника(org_id: int, member_id: int, да
     if not членство:
         raise HTTPException(status_code=404, detail="Участник не найден")
     
-    # Проверка, что текущий - руководитель этой организации
     организация = db.query(Организация).filter(Организация.id == org_id).first()
     if текущий.role == РольПользователя.РУКОВОДИТЕЛЬ and организация.lead_id != текущий.id:
         raise HTTPException(status_code=403, detail="Нет прав")
