@@ -11,219 +11,169 @@ export default function УправлениеОрганизацией() {
   const [заявки, setЗаявки] = useState([])
   const [участники, setУчастники] = useState([])
   const [роли, setРоли] = useState([])
-  const [отчет, setОтчет] = useState(null) // Состояние для цифр
+  const [отчет, setОтчет] = useState(null)
+  const [новости, setНовости] = useState([])
 
   const [загрузка, setЗагрузка] = useState(true)
   const [ошибка, setОшибка] = useState('')
 
-  useEffect(() => {
-    if (!localStorage.getItem('token')) {
-      navigate('/login')
-      return
-    }
+  // Состояния для редактирования
+  const [описание, setОписание] = useState('')
+  const [аватар, setАватар] = useState(null)
+  const [обложка, setОбложка] = useState(null)
+  const [сохранение, setСохранение] = useState(false)
 
-    Promise.all([api.мой_профиль(), api.список_организаций()])
-      .then(([п, орги]) => {
-        setПрофиль(п)
-        // Оставляем только те организации, где текущий юзер - лидер
-        const мои = орги.filter((о) => о.lead_id === п.id)
-        setОрганизации(мои)
-        if (мои.length > 0) setВыбранная(мои[0].id)
-      })
-      .catch((e) => setОшибка(e.message))
-      .finally(() => setЗагрузка(false))
+  // Состояния для новостей
+  const [заголовокНовости, setЗаголовокНовости] = useState('')
+  const [текстНовости, setТекстНовости] = useState('')
+  const [файлНовости, setФайлНовости] = useState(null)
+
+  // Состояния для событий
+  const [названиеСобытия, setНазваниеСобытия] = useState('')
+  const [место, setМесто] = useState('')
+  const [дата, setДата] = useState('')
+
+  useEffect(() => {
+    if (!localStorage.getItem('token')) return navigate('/login')
+    Promise.all([api.мой_профиль(), api.список_организаций()]).then(([п, орги]) => {
+      setПрофиль(п)
+      const мои = орги.filter((о) => о.lead_id === п.id)
+      setОрганизации(мои)
+      if (мои.length > 0) { setВыбранная(мои[0].id); setОписание(мои[0].description || '') }
+    }).catch((e) => setОшибка(e.message)).finally(() => setЗагрузка(false))
   }, [navigate])
 
   useEffect(() => {
-    if (!выбранная) return
-    загрузитьДанныеОрганизации(выбранная)
+    if (выбранная) загрузитьДанныеОрганизации(выбранная)
   }, [выбранная])
 
   function загрузитьДанныеОрганизации(orgId) {
     Promise.all([
-      api.заявки_организации(orgId),
-      api.участники_организации(orgId),
-      api.роли_организации(orgId),
-      api.отчет_организации(orgId) // Запрашиваем сводку
-    ]).then(([з, у, р, о]) => {
-      setЗаявки(з)
-      setУчастники(у)
-      setРоли(р)
-      setОтчет(о)
-    })
+      api.заявки_организации(orgId), api.участники_организации(orgId),
+      api.роли_организации(orgId), api.отчет_организации(orgId), api.новости_организации(orgId)
+    ]).then(([з, у, р, о, н]) => { setЗаявки(з); setУчастники(у); setРоли(р); setОтчет(о); setНовости(н) })
   }
 
-  async function сменитьСтатус(id, новыйСтатус) {
+  async function сохранитьОрганизацию(e) {
+    e.preventDefault()
+    setСохранение(true)
     try {
-      await api.сменить_статус(id, новыйСтатус)
-      загрузитьДанныеОрганизации(выбранная)
-    } catch (e) {
-      alert(e.message)
-    }
+      let avatarUrl = организации.find(o => o.id === выбранная).avatar_url
+      let coverUrl = организации.find(o => o.id === выбранная).cover_url
+
+      if (аватар) { const r = await api.загрузить_картинку(аватар); avatarUrl = r.url }
+      if (обложка) { const r = await api.загрузить_картинку(обложка); coverUrl = r.url }
+
+      await api.редактировать_организацию(выбранная, {
+        ...организации.find(o => o.id === выбранная),
+        description: описание, avatar_url: avatarUrl, cover_url: coverUrl
+      })
+      alert('Сохранено!')
+      window.location.reload()
+    } catch (err) { alert(err.message) } finally { setСохранение(false) }
   }
 
-  async function изменитьРоль(участникId, roleId) {
+  async function добавитьНовость(e) {
+    e.preventDefault()
+    if (!заголовокНовости.trim() || !текстНовости.trim()) return alert('Заполните поля')
     try {
-      await api.сменить_роль_участника(выбранная, участникId, Number(roleId))
+      let url = null
+      if (файлНовости) { const r = await api.загрузить_фото_новости(выбранная, файлНовости); url = r.url }
+      await api.создать_новость(выбранная, { title: заголовокНовости, content: текстНовости, image_url: url })
+      setЗаголовокНовости(''); setТекстНовости(''); setФайлНовости(null)
       загрузитьДанныеОрганизации(выбранная)
-    } catch (e) {
-      alert(e.message)
-    }
+      alert('Новость опубликована!')
+    } catch (err) { alert(err.message) }
   }
 
-  if (загрузка) return <div className="container py-5 text-center text-muted">Загрузка...</div>
-  if (ошибка) return <div className="container py-5"><div className="alert alert-danger">{ошибка}</div></div>
-
-  if (организации.length === 0) {
-    return (
-      <div className="container py-5 text-center">
-        <h1 className="h3 mb-3 text-dark">Управление организацией</h1>
-        <div className="alert alert-warning mb-4" style={{ maxWidth: 600, margin: '0 auto' }}>
-          Вы не являетесь руководителем ни одной организации.
-        </div>
-        <Link to="/create-organization" className="btn btn-primary">
-          Создать свою организацию
-        </Link>
-      </div>
-    )
+  async function добавитьСобытие(e) {
+    e.preventDefault()
+    if (!названиеСобытия || !дата) return alert('Заполните поля')
+    try {
+      await api.создать_мероприятие({
+        organization_id: выбранная, title: названиеСобытия, place: место, starts_at: new Date(дата).toISOString()
+      })
+      setНазваниеСобытия(''); setМесто(''); setДата('')
+      alert('Событие создано!')
+    } catch (err) { alert(err.message) }
   }
+
+  if (загрузка) return <div className="container py-5 text-center">Загрузка...</div>
+  if (организации.length === 0) return <div className="container py-5 text-center"><h3>Вы не руководитель</h3><Link to="/create-organization" className="btn btn-primary mt-3">Создать</Link></div>
 
   return (
     <div className="container py-5">
-      <div className="d-flex justify-content-between align-items-end mb-4">
-        <h1 className="h3 fw-bold mb-0 text-dark">Управление</h1>
-        <Link to="/create-organization" className="btn btn-outline-primary btn-sm">
-          + Создать организацию
-        </Link>
-      </div>
-
-      <div className="mb-4">
-        <label className="form-label fw-semibold">Выберите организацию</label>
-        <select
-          className="form-select"
-          value={выбранная || ''}
-          onChange={(e) => setВыбранная(Number(e.target.value))}
-        >
-          {организации.map((о) => (
-            <option key={о.id} value={о.id}>{о.name}</option>
-          ))}
+      <div className="d-flex justify-content-between mb-4">
+        <h1 className="h3 fw-bold text-dark">Управление</h1>
+        <select className="form-select w-auto" value={выбранная} onChange={(e) => { setВыбранная(Number(e.target.value)); setОписание(организации.find(o=>o.id===Number(e.target.value)).description) }}>
+          {организации.map((о) => <option key={о.id} value={о.id}>{о.name}</option>)}
         </select>
       </div>
 
-      {/* ДАШБОРД ОТЧЕТНОСТИ */}
-      {отчет && (
-        <div className="row g-3 mb-5">
-          <div className="col-md-4">
-            <div className="card card-campus p-4 text-center h-100">
-              <div className="text-muted small mb-1 text-uppercase fw-semibold">Участники</div>
-              <div className="display-5 fw-bold" style={{ color: 'var(--campus-primary)' }}>
-                {отчет.members_count}
-              </div>
+      <div className="row g-4">
+        <div className="col-lg-8">
+          {отчет && <div className="row g-3 mb-4"><div className="col-4"><div className="card p-3 text-center"><small>Участники</small><h2>{отчет.members_count}</h2></div></div><div className="col-4"><div className="card p-3 text-center"><small>События</small><h2>{отчет.events_count}</h2></div></div><div className="col-4"><div className="card p-3 text-center"><small>Документы</small><h2>{отчет.documents_count}</h2></div></div></div>}
+
+          <div className="card mb-4">
+            <div className="card-body">
+              <h5 className="fw-bold mb-3">Редактирование страницы</h5>
+              <form onSubmit={сохранитьОрганизацию}>
+                <div className="mb-2"><label className="small">Аватарка (файл)</label><input type="file" className="form-control form-control-sm" accept="image/*" onChange={e => setАватар(e.target.files[0])} /></div>
+                <div className="mb-2"><label className="small">Обложка (файл)</label><input type="file" className="form-control form-control-sm" accept="image/*" onChange={e => setОбложка(e.target.files[0])} /></div>
+                <div className="mb-2"><label className="small">Описание</label><textarea className="form-control" rows="3" value={описание} onChange={e => setОписание(e.target.value)} /></div>
+                <button type="submit" className="btn btn-primary btn-sm" disabled={сохранение}>{сохранение ? 'Загрузка...' : 'Сохранить'}</button>
+              </form>
             </div>
           </div>
-          <div className="col-md-4">
-            <div className="card card-campus p-4 text-center h-100">
-              <div className="text-muted small mb-1 text-uppercase fw-semibold">Мероприятия</div>
-              <div className="display-5 fw-bold" style={{ color: 'var(--campus-primary)' }}>
-                {отчет.events_count}
-              </div>
+
+          <div className="card mb-4">
+            <div className="card-body">
+              <h5 className="fw-bold mb-3">Создать событие</h5>
+              <form onSubmit={добавитьСобытие} className="row g-2">
+                <div className="col-12"><input type="text" className="form-control form-control-sm" placeholder="Название события" value={названиеСобытия} onChange={e => setНазваниеСобытия(e.target.value)} required /></div>
+                <div className="col-md-6"><input type="text" className="form-control form-control-sm" placeholder="Место" value={место} onChange={e => setМесто(e.target.value)} required /></div>
+                <div className="col-md-6"><input type="datetime-local" className="form-control form-control-sm" value={дата} onChange={e => setДата(e.target.value)} required /></div>
+                <div className="col-12"><button type="submit" className="btn btn-success btn-sm">Добавить</button></div>
+              </form>
             </div>
           </div>
-          <div className="col-md-4">
-            <div className="card card-campus p-4 text-center h-100">
-              <div className="text-muted small mb-1 text-uppercase fw-semibold">Документы</div>
-              <div className="display-5 fw-bold" style={{ color: 'var(--campus-primary)' }}>
-                {отчет.documents_count}
+
+          <h5 className="fw-bold mb-3">Заявки</h5>
+          <div className="list-group">
+            {заявки.map(з => (
+              <div key={з.id} className="list-group-item d-flex justify-content-between">
+                 <span>Заявка #{з.id} ({з.status})</span>
+                 <div className="d-flex gap-1">
+                   {з.status === 'подана' && <button className="btn btn-sm btn-primary" onClick={() => api.сменить_статус(з.id, 'рассмотрение').then(()=>загрузитьДанныеОрганизации(выбранная))}>На рассмотрение</button>}
+                   {з.status === 'рассмотрение' && <button className="btn btn-sm btn-info" onClick={() => api.сменить_статус(з.id, 'собеседование').then(()=>загрузитьДанныеОрганизации(выбранная))}>Собеседование</button>}
+                   {з.status === 'собеседование' && <button className="btn btn-sm btn-success" onClick={() => api.сменить_статус(з.id, 'решение').then(()=>загрузитьДанныеОрганизации(выбранная))}>Принять</button>}
+                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
-      )}
 
-      <h2 className="h5 mb-3 fw-bold">Входящие заявки</h2>
-      {заявки.length === 0 && <p className="text-muted">Новых заявок нет.</p>}
-      <div className="list-group mb-5">
-        {заявки.map((з) => (
-          <div key={з.id} className="list-group-item p-4">
-            <div className="d-flex justify-content-between align-items-start mb-2">
-              <div>
-                <div className="fw-semibold">Заявка №{з.id} от пользователя #{з.user_id}</div>
-                {з.comment && <div className="small text-muted mt-1">«{з.comment}»</div>}
-              </div>
-              <span className="badge bg-secondary">{з.status}</span>
-            </div>
-
-            {з.ответы && з.ответы.length > 0 && (
-              <div className="bg-light p-3 rounded mb-3 small">
-                <div className="fw-semibold mb-2">Ответы на анкету:</div>
-                {з.ответы.map((о, i) => (
-                  <div key={i} className="mb-1">
-                    <span className="text-muted">{о.question}</span><br/>{о.answer}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="d-flex flex-wrap gap-2 align-items-center mt-3 pt-3 border-top">
-              {з.status === 'подана' && (
-                <button className="btn btn-sm btn-primary" onClick={() => сменитьСтатус(з.id, 'рассмотрение')}>
-                  Взять на рассмотрение
-                </button>
-              )}
-              
-              {з.status === 'рассмотрение' && (
-                <button className="btn btn-sm btn-info text-white" onClick={() => сменитьСтатус(з.id, 'собеседование')}>
-                  Назначить собеседование
-                </button>
-              )}
-
-              {з.status === 'собеседование' && (
-                <>
-                  <button className="btn btn-sm btn-success" onClick={() => сменитьСтатус(з.id, 'решение')}>
-                    Принять в организацию
-                  </button>
-                  <button className="btn btn-sm btn-outline-danger ms-auto" onClick={() => сменитьСтатус(з.id, 'подана')}>
-                    Отклонить (вернуть)
-                  </button>
-                </>
-              )}
-              
-              {з.status === 'решение' && (
-                <span className="text-success fw-bold small">Студент зачислен в состав</span>
-              )}
+        <div className="col-lg-4">
+          <div className="card mb-4">
+            <div className="card-body">
+              <h5 className="fw-bold mb-3">Новый пост</h5>
+              <form onSubmit={добавитьНовость}>
+                <input type="text" className="form-control form-control-sm mb-2" placeholder="Заголовок" value={заголовокНовости} onChange={e => setЗаголовокНовости(e.target.value)} required />
+                <textarea className="form-control form-control-sm mb-2" rows="3" placeholder="Текст поста..." value={текстНовости} onChange={e => setТекстНовости(e.target.value)} required />
+                <input type="file" className="form-control form-control-sm mb-2" accept="image/*" onChange={e => setФайлНовости(e.target.files[0])} />
+                <button type="submit" className="btn btn-primary btn-sm w-100">Опубликовать</button>
+              </form>
             </div>
           </div>
-        ))}
-      </div>
-
-      <h2 className="h5 mb-3 fw-bold">Участники организации</h2>
-      {участники.length === 0 && <p className="text-muted">В организации пока нет участников.</p>}
-      <div className="list-group">
-        {участники.map((у) => (
-          <div key={у.id} className="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div>
-              <div className="fw-semibold">{у.user ? у.user.full_name : 'Студент'}</div>
-              <div className="text-muted small">{у.user ? у.user.email : ''}</div>
+          <h5 className="fw-bold mb-3">Мои посты</h5>
+          {новости.map(н => (
+            <div key={н.id} className="card p-2 mb-2 d-flex flex-row justify-content-between align-items-center">
+               <small className="text-truncate" style={{maxWidth: '80%'}}>{н.title}</small>
+               <button className="btn btn-sm btn-outline-danger" onClick={() => api.удалить_новость(выбранная, н.id).then(()=>загрузитьДанныеОрганизации(выбранная))}>✕</button>
             </div>
-            
-            <div className="d-flex align-items-center gap-2">
-              <span className="small text-muted">Должность:</span>
-              <select 
-                className="form-select form-select-sm" 
-                style={{ width: 'auto' }}
-                value={у.role_id || ''}
-                onChange={(e) => изменитьРоль(у.id, e.target.value)}
-              >
-                <option value="">Без должности</option>
-                {роли.map(р => (
-                  <option key={р.id} value={р.id}>{р.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-
     </div>
   )
 }

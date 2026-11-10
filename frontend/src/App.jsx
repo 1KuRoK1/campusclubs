@@ -8,6 +8,7 @@ import Вход from './pages/Вход'
 import ЛичныйКабинет from './pages/ЛичныйКабинет'
 import УправлениеОрганизацией from './pages/УправлениеОрганизацией'
 import СоздатьОрганизацию from './pages/СоздатьОрганизацию'
+import Администрирование from './pages/Администрирование'
 
 function Шапка() {
   const [профиль, setПрофиль] = useState(null)
@@ -23,7 +24,6 @@ function Шапка() {
 
   useEffect(() => {
     проверитьПрофиль()
-    // Слушаем событие, чтобы шапка обновлялась сразу после входа/выхода
     window.addEventListener('auth-change', проверитьПрофиль)
     return () => window.removeEventListener('auth-change', проверитьПрофиль)
   }, [])
@@ -42,12 +42,7 @@ function Шапка() {
           СтудПортал
         </Link>
         
-        <button
-          className="navbar-toggler border-0 shadow-none"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#менюНавигации"
-        >
+        <button className="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#менюНавигации">
           <span className="navbar-toggler-icon"></span>
         </button>
 
@@ -55,9 +50,14 @@ function Шапка() {
           <div className="navbar-nav ms-auto align-items-center gap-2">
             <Link className="nav-link" to="/">Каталог</Link>
             
-            {/* Показываем управление только руководителям и админам */}
-            {профиль && (профиль.role === 'руководитель' || профиль.role === 'администрация') && (
+            {/* Управление только для руководителей */}
+            {профиль && профиль.role === 'руководитель' && (
               <Link className="nav-link" to="/manage">Управление</Link>
+            )}
+
+            {/* Администрирование только для администрации */}
+            {профиль && профиль.role === 'администрация' && (
+              <Link className="nav-link" to="/admin">Администрирование</Link>
             )}
 
             {профиль ? (
@@ -91,6 +91,7 @@ function App() {
           <Route path="/cabinet" element={<ЛичныйКабинет />} />
           <Route path="/manage" element={<УправлениеОрганизацией />} />
           <Route path="/create-organization" element={<СоздатьОрганизацию />} />
+          <Route path="/admin" element={<Администрирование />} />
           <Route path="/login" element={<Вход />} />
         </Routes>
       </main>
@@ -100,10 +101,7 @@ function App() {
           <div className="row g-4">
             <div className="col-md-6">
               <h5>СтудПортал ИРИТ-РТФ</h5>
-              <p className="small mb-0">
-                Единая платформа для управления студенческими организациями института. 
-                Находите сообщества по интересам, подавайте заявки и следите за мероприятиями.
-              </p>
+              <p className="small mb-0">Единая платформа для управления студенческими организациями института.</p>
             </div>
             <div className="col-md-3">
               <h5>Разделы</h5>
@@ -120,9 +118,7 @@ function App() {
               </ul>
             </div>
           </div>
-          <div className="footer-bottom">
-            © {new Date().getFullYear()} СтудПортал ИРИТ-РТФ. Все права защищены.
-          </div>
+          <div className="footer-bottom">© {new Date().getFullYear()} СтудПортал ИРИТ-РТФ.</div>
         </div>
       </footer>
     </BrowserRouter>

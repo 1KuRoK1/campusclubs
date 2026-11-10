@@ -157,4 +157,65 @@ export const api = {
     }),
 
   отчет_организации: (orgId) => запрос(`/organizations/${orgId}/report`),
+
+  // АДМИНИСТРИРОВАНИЕ
+  все_пользователи: (параметры = {}) => {
+    const часть = new URLSearchParams()
+    Object.entries(параметры).forEach(([ключ, значение]) => {
+      if (значение !== undefined && значение !== null && значение !== '') {
+        часть.append(ключ, значение)
+      }
+    })
+    const строка = часть.toString()
+    return запрос(`/admin/users${строка ? '?' + строка : ''}`)
+  },
+  сменить_роль_пользователя: (userId, role) => запрос(`/admin/users/${userId}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
+  удалить_пользователя: (userId) => запрос(`/admin/users/${userId}`, { method: 'DELETE' }),
+  
+  все_организации_админ: (параметры = {}) => {
+    const часть = new URLSearchParams()
+    Object.entries(параметры).forEach(([ключ, значение]) => {
+      if (значение !== undefined && значение !== null && значение !== '') {
+        часть.append(ключ, значение)
+      }
+    })
+    const строка = часть.toString()
+    return запрос(`/admin/organizations${строка ? '?' + строка : ''}`)
+  },
+  удалить_организацию_админ: (orgId) => запрос(`/admin/organizations/${orgId}`, { method: 'DELETE' }),
+
+  // НОВОСТИ И ФАЙЛЫ
+  новости_организации: (orgId) => запрос(`/organizations/${orgId}/news`),
+  создать_новость: (orgId, данные) => запрос(`/organizations/${orgId}/news`, { method: 'POST', body: JSON.stringify(данные) }),
+  удалить_новость: (orgId, newsId) => запрос(`/organizations/${orgId}/news/${newsId}`, { method: 'DELETE' }),
+  
+  создать_мероприятие: (данные) => запрос('/events', { method: 'POST', body: JSON.stringify(данные) }),
+  редактировать_организацию: (orgId, данные) => запрос(`/organizations/${orgId}`, { method: 'PATCH', body: JSON.stringify(данные) }),
+
+  // Загрузка картинок
+  загрузить_картинку: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const токен = получить_токен()
+    const res = await fetch(`${БАЗОВЫЙ_АДРЕС}/organizations/upload-image`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${токен}` },
+      body: formData
+    })
+    if (!res.ok) throw new Error('Ошибка загрузки картинки')
+    return res.json()
+  },
+
+  загрузить_фото_новости: async (orgId, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const токен = получить_токен()
+    const res = await fetch(`${БАЗОВЫЙ_АДРЕС}/organizations/${orgId}/news/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${токен}` },
+      body: formData
+    })
+    if (!res.ok) throw new Error('Ошибка загрузки фото')
+    return res.json()
+  },
 }
