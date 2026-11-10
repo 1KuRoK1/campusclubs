@@ -61,23 +61,23 @@ class Пользователь(Base):
     организации_руководимые = relationship(
         "Организация", back_populates="руководитель", foreign_keys="Организация.lead_id"
     )
-    членства = relationship("Членство", back_populates="пользователь")
-    заявки = relationship("Заявка", back_populates="пользователь")
+    членства = relationship("Членство", back_populates="пользователь", cascade="all, delete-orphan")
+    заявки = relationship("Заявка", back_populates="пользователь", cascade="all, delete-orphan")
     изменения_статусов = relationship(
-        "ИсторияСтатусов", back_populates="изменивший", foreign_keys="ИсторияСтатусов.changed_by"
+        "ИсторияСтатусов", back_populates="изменивший", foreign_keys="ИсторияСтатусов.changed_by", cascade="all, delete-orphan"
     )
     созданные_мероприятия = relationship(
-        "Мероприятие", back_populates="создатель", foreign_keys="Мероприятие.created_by"
+        "Мероприятие", back_populates="создатель", foreign_keys="Мероприятие.created_by", cascade="all, delete-orphan"
     )
-    записи_на_мероприятия = relationship("ЗаписьНаМероприятие", back_populates="пользователь")
+    записи_на_мероприятия = relationship("ЗаписьНаМероприятие", back_populates="пользователь", cascade="all, delete-orphan")
     объявления = relationship(
-        "Объявление", back_populates="автор", foreign_keys="Объявление.author_id"
+        "Объявление", back_populates="автор", foreign_keys="Объявление.author_id", cascade="all, delete-orphan"
     )
     загруженные_документы = relationship(
-        "Документ", back_populates="загрузивший", foreign_keys="Документ.uploaded_by"
+        "Документ", back_populates="загрузивший", foreign_keys="Документ.uploaded_by", cascade="all, delete-orphan"
     )
-    отзывы = relationship("Отзыв", back_populates="пользователь")
-    уведомления = relationship("Уведомление", back_populates="пользователь")
+    отзывы = relationship("Отзыв", back_populates="пользователь", cascade="all, delete-orphan")
+    уведомления = relationship("Уведомление", back_populates="пользователь", cascade="all, delete-orphan")
 
 
 class Организация(Base):
@@ -91,6 +91,8 @@ class Организация(Base):
     faculty = Column(String(255), nullable=True)
     size = Column(Integer, default=0, nullable=False)
     contacts = Column(String(500), nullable=True)
+    avatar_url = Column(String(500), nullable=True)
+    cover_url = Column(String(500), nullable=True)
     lead_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -102,6 +104,7 @@ class Организация(Base):
     заявки = relationship("Заявка", back_populates="организация", cascade="all, delete-orphan")
     мероприятия = relationship("Мероприятие", back_populates="организация", cascade="all, delete-orphan")
     объявления = relationship("Объявление", back_populates="организация", cascade="all, delete-orphan")
+    новости = relationship("Новость", back_populates="организация", cascade="all, delete-orphan")
     документы = relationship("Документ", back_populates="организация", cascade="all, delete-orphan")
     отчёты = relationship("Отчёт", back_populates="организация", cascade="all, delete-orphan")
     отзывы = relationship("Отзыв", back_populates="организация", cascade="all, delete-orphan")
@@ -238,6 +241,19 @@ class Объявление(Base):
 
     организация = relationship("Организация", back_populates="объявления")
     автор = relationship("Пользователь", back_populates="объявления", foreign_keys=[author_id])
+
+
+class Новость(Base):
+    __tablename__ = "news"
+
+    id = Column(Integer, primary_key=True, index=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=False)
+    title = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    image_url = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    организация = relationship("Организация", back_populates="новости")
 
 
 class Документ(Base):

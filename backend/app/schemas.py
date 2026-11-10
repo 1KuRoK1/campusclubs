@@ -13,7 +13,7 @@ from app.models import (
 
 class ПользовательСоздать(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6, max_length=72) # Ограничение bcrypt
+    password: str = Field(min_length=6, max_length=72)
     full_name: str = Field(min_length=2)
     role: РольПользователя = РольПользователя.СТУДЕНТ
     faculty: Optional[str] = None
@@ -43,6 +43,10 @@ class ПользовательОбновить(BaseModel):
     portfolio_url: Optional[str] = None
 
 
+class СменаРолиПользователя(BaseModel):
+    role: РольПользователя
+
+
 class ВходВСистему(BaseModel):
     email: EmailStr
     password: str
@@ -61,6 +65,8 @@ class ОрганизацияСоздать(BaseModel):
     faculty: Optional[str] = None
     size: int = Field(default=0, ge=0)
     contacts: Optional[str] = None
+    avatar_url: Optional[str] = None
+    cover_url: Optional[str] = None
     lead_id: Optional[int] = None
 
 
@@ -73,6 +79,8 @@ class ОрганизацияЧитать(BaseModel):
     faculty: Optional[str] = None
     size: int
     contacts: Optional[str] = None
+    avatar_url: Optional[str] = None
+    cover_url: Optional[str] = None
     lead_id: Optional[int] = None
     created_at: datetime
 
@@ -84,6 +92,7 @@ class ОрганизацияКратко(BaseModel):
     id: int
     name: str
     direction: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -211,3 +220,21 @@ class РейтингОрганизации(BaseModel):
     organization_id: int
     average_rating: float
     reviews_count: int
+
+
+class НовостьСоздать(BaseModel):
+    title: str = Field(min_length=3, max_length=255)
+    content: str = Field(min_length=10)
+    image_url: Optional[str] = None
+
+
+class НовостьЧитать(BaseModel):
+    id: int
+    organization_id: int
+    title: str
+    content: str
+    image_url: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
